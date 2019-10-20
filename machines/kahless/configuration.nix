@@ -61,6 +61,7 @@
     #(wine.override { wineBuild = "wineWow"; })
     networkmanagerapplet
     docker_compose
+    #steam
 
     # Haskell packages for XMonad
     xmonad-with-packages
@@ -70,25 +71,26 @@
     "/run/current-system/sw/bin/zsh"
   ];
 
-  environment.etc."nsswitch.conf".text = "
-passwd:    files mymachines systemd
-group:     files mymachines systemd
-shadow:    files
+  #environment.etc."nsswitch.conf".text = "
+#passwd:    files mymachines systemd
+#group:     files mymachines systemd
+#shadow:    files
 
-hosts:     files mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] dns mdns myhostname
-networks:  files
+#hosts:     files mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] dns mdns myhostname
+#networks:  files
 
-ethers:    files
-services:  files
-protocols: files
-rpc:       files
-  ";
+#ethers:    files
+#services:  files
+#protocols: files
+#rpc:       files
+  #";
 
   networking = {
     hostName = "kahless";
     useDHCP = false;
     networkmanager = {
         enable = true;
+        wifi.scanRandMacAddress = false;
     };
     wireless.enable = false;
   };
@@ -130,7 +132,7 @@ rpc:       files
     xserver = {
       enable = true;
       layout = "us";
-      videoDrivers = ["intel"];
+      videoDrivers = ["intel" "nvidia"];
 
       windowManager = {
           xmonad = {
@@ -207,12 +209,19 @@ rpc:       files
       };
 
       host = {
-        enable = false;
-        enableHardening = true;
+        enable = true;
+        enableHardening = false;
         addNetworkInterface = true;
       };
     };
   };
+
+  #hardware.nvidia.optimus_prime = {
+    #enable = true;
+    #nvidiaBusId = "";
+    #intelBusId = "";
+  #};
+  hardware.bumblebee.enable = true;
 
   # PulseAudio
   hardware.pulseaudio.enable = true;
@@ -221,7 +230,15 @@ rpc:       files
   hardware.bluetooth.enable = true;
 
   # 32-bit DRI support.
-  hardware.opengl.driSupport32Bit = true;
+  hardware.opengl = {
+    enable = true;
+    extraPackages = with pkgs; [
+      vaapiIntel
+      vaapiVdpau
+      libvdpau-va-gl
+    ];
+    driSupport32Bit = true;
+  };
 
   nixpkgs.config.allowUnfree = true;
 
@@ -258,5 +275,11 @@ rpc:       files
         hello
       ];
     };
+  };
+
+  users.extraGroups = {
+    vboxusers.members = [
+      "roni"
+    ];
   };
 }
